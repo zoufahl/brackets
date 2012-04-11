@@ -301,6 +301,8 @@ define(function (require, exports, module) {
             .on("keyEvent", _checkElectricChars)
             .on("change", this._handleEditorChange.bind(this));
         
+        $(container).mousemove(this._handleMouseMove.bind(this));
+        
         // Set code-coloring mode BEFORE populating with text, to avoid a flash of uncolored text
         this._codeMirror.setOption("mode", mode);
         
@@ -466,6 +468,16 @@ define(function (require, exports, module) {
             if (this._visibleRange.startLine === null || this._visibleRange.endLine === null) {
                 throw new Error("ERROR: Typing in Editor should not destroy its own _visibleRange");
             }
+        }
+    };
+
+    Editor.prototype._handleMouseMove = function (e) {
+        var token = this._codeMirror.getTokenAt(this._codeMirror.coordsChar({x: e.pageX, y: e.pageY}));
+        
+        if (token.className !== this._lastTokenClass) {
+            this._lastTokenClass = token.className;
+            var $tokenDiv = $("#token");
+            $tokenDiv.text("Class: " + token.className + ", Token: " + token.string);
         }
     };
     
