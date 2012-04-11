@@ -477,7 +477,7 @@ define(function (require, exports, module) {
         if (token.className !== this._lastTokenClass) {
             this._lastTokenClass = token.className;
             var $tokenDiv = $("#token");
-            $tokenDiv.text("Class: " + token.className + ", Token: " + token.string);
+            $tokenDiv.text("Style: " + token.className + ", Value: " + token.string);
         }
     };
     
