@@ -1,3 +1,25 @@
+
+// Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+//  
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"), 
+// to deal in the Software without restriction, including without limitation 
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+// and/or sell copies of the Software, and to permit persons to whom the 
+// Software is furnished to do so, subject to the following conditions:
+//  
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//  
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+// DEALINGS IN THE SOFTWARE.
+
+
 /*
  * Brackets Default Theme
  *
@@ -23,7 +45,7 @@
  */
 @background-color-1: darken(@bc-white, @bc-color-step-size*2);
 @background-color-2: darken(@bc-white, @bc-color-step-size);
-@background-color-3: @bc-light-gray;
+@background-color-3: #f8f8f8;
 
 /*
  * @content-color-stronger should be should be further away from the
@@ -32,36 +54,45 @@
  * @content-color-weaker should be closer to the background color
  * than @content-color (i.e. less contrasty).
  */
-@content-color: @bc-dark-gray;
+@content-color: #535353;
 @content-color-stronger: @bc-black;
 @content-color-weaker: lighten(@bc-black, @bc-color-step-size*6);
 
 /* Code Styling */
 
 /* code accent colors */
-@accent-keyword: @bc-blue;
-@accent-atom: @bc-orange;
-@accent-number: @bc-green;
-@accent-def: @bc-violet;
-@accent-variable: @bc-blue;
-@accent-variable-2: @content-color;
-@accent-variable-3: @content-color;
-@accent-property: @bc-violet;
-@accent-operator: @content-color;
-@accent-comment: @content-color-weaker;
-@accent-string: @bc-orange;
-@accent-string-2: @bc-orange;
-@accent-meta: @bc-dark-gray;
-@accent-error: @bc-red;
-@accent-qualifier: @bc-blue;
-@accent-builtin: @bc-blue;
-@accent-bracket: @content-color;
-@accent-tag: @bc-blue;
-@accent-attribute: @bc-green;
-@accent-header: @bc-magenta;
-@accent-quote: @bc-blue;
-@accent-hr: @bc-orange;
-@accent-link: @bc-violet;
+@accent-keyword: #446fbd;
+@accent-atom: #f18900;
+@accent-number: #738d00;
+@accent-def: #8757ad;
+@accent-variable: #446fbd;
+@accent-variable-2: #535353;
+@accent-variable-3: #535353;
+@accent-property: #8757ad;
+@accent-operator: #535353;
+@accent-comment: #a2a2a2;
+@accent-string: #f18900;
+@accent-string-2: #f18900;
+@accent-meta: #535353;
+@accent-error: #dc322f;
+@accent-qualifier: #446fbd;
+@accent-builtin: #446fbd;
+@accent-bracket: #535353;
+@accent-tag: #446fbd;
+@accent-attribute: #738d00;
+@accent-header: #d33682;
+@accent-quote: #446fbd;
+@accent-hr: #f18900;
+@accent-link: #8757ad;
+
+/* inline editor colors */
+@inline-background-color-1: #eaeaea;
+@inline-background-color-2: #dfe2e2;
+@inline-background-color-3: #d0d5d5;
+
+@inline-color-1: #a1a3a4;
+@inline-color-2: #8a8a8a;
+@inline-color-3: @bc-black;
 
 /* Code font formatting
  *
@@ -72,6 +103,8 @@
 .code-font() {
     color: @content-color;
     pre {
+        // line-height must be specified in px not em because the code font and line number font sizes are different.
+        // Sizing via em will cause the code and line numbers to misalign
         line-height: 15px;
     }
 }

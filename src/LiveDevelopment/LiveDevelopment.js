@@ -1,10 +1,28 @@
 /*
- * Copyright 2012 Adobe Systems Incorporated. All Rights Reserved.
- * @author Jonathan Diehl <jdiehl@adobe.com>
+ * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ *  
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ *  
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *  
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * DEALINGS IN THE SOFTWARE.
+ * 
  */
 
-/*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, forin: true, maxerr: 50, regexp: true */
-/*global define, $, FileError, brackets */
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, forin: true, maxerr: 50, regexp: true */
+/*global define, $, FileError, brackets, window */
 
 /**
  * LiveDevelopment manages the Inspector, all Agents, and the active LiveDocument
@@ -172,7 +190,7 @@ define(function LiveDevelopment(require, exports, module) {
                 path = path.slice(1);
             }
         }
-        return path;
+        return decodeURI(path);
     }
 
     /** Open a live document
@@ -263,12 +281,24 @@ define(function LiveDevelopment(require, exports, module) {
         var doc = _getCurrentDocument();
         var browserStarted = false;
         var retryCount = 0;
+        
+        function showWrongDocError() {
+            Dialogs.showModalDialog(
+                Dialogs.DIALOG_ID_ERROR,
+                Strings.LIVE_DEVELOPMENT_ERROR_TITLE,
+                Strings.LIVE_DEV_NEED_HTML_MESSAGE
+            );
+        }
                 
-        if (doc && doc.root) {
+        if (!doc || !doc.root) {
+            showWrongDocError();
+            
+        } else {
             // For Sprint 6, we only open live development connections for HTML files
             // FUTURE: Remove this test when we support opening connections for different
             // file types.
             if (!doc.extension || doc.extension.indexOf('htm') !== 0) {
+                showWrongDocError();
                 return;
             }
             
@@ -290,7 +320,7 @@ define(function LiveDevelopment(require, exports, module) {
                             NativeApp.closeLiveBrowser()
                                 .done(function () {
                                     browserStarted = false;
-                                    setTimeout(open);
+                                    window.setTimeout(open);
                                 })
                                 .fail(function (err) {
                                     // Report error?
@@ -336,7 +366,7 @@ define(function LiveDevelopment(require, exports, module) {
                 }
                 
                 if (exports.status !== -1) {
-                    setTimeout(function retryConnect() {
+                    window.setTimeout(function retryConnect() {
                         Inspector.connectToURL(doc.root.url).fail(onConnectFail);
                     }, 500);
                 }
@@ -369,12 +399,12 @@ define(function LiveDevelopment(require, exports, module) {
                 /* FUTURE: support live connections for docments other than html */
                 if (doc.extension && doc.extension.indexOf('htm') === 0 && doc.file.fullPath !== _htmlDocumentPath) {
                     close();
-                    setTimeout(open);
+                    window.setTimeout(open);
                     _htmlDocumentPath = doc.file.fullPath;
                 }
             }
         } else if (exports.config.autoconnect) {
-            setTimeout(open);
+            window.setTimeout(open);
         }
     }
     

@@ -1,9 +1,29 @@
 /*
- * Copyright 2012 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ *  
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ *  
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *  
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * DEALINGS IN THE SOFTWARE.
+ * 
  */
 
-/*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, maxerr: 50 */
-/*global define: false, $: false, CodeMirror: false */
+
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
+/*global define, $, CodeMirror */
 
 /**
  * Set of utilities for simple parsing of CSS text.
@@ -40,7 +60,7 @@ define(function (require, exports, module) {
      * @param text {!String} CSS text to extract from
      * @return {Array.<Object>} Array with objects specifying selectors.
      */
-    function _extractAllSelectors(text) {
+    function extractAllSelectors(text) {
         var selectors = [];
         var mode = CodeMirror.getMode({indentUnit: 2}, "css");
         var state = CodeMirror.startState(mode);
@@ -213,7 +233,7 @@ define(function (require, exports, module) {
      *      matched selector.
      */
     function _findAllMatchingSelectorsInText(text, selector) {
-        var allSelectors = _extractAllSelectors(text);
+        var allSelectors = extractAllSelectors(text);
         var result = [];
         var i;
         
@@ -260,7 +280,7 @@ define(function (require, exports, module) {
     function _addSelectorsToResults(resultSelectors, selectorsToAdd, sourceDoc, lineOffset) {
         selectorsToAdd.forEach(function (selectorInfo) {
             resultSelectors.push({
-                selector: selectorInfo.selector,
+                name: selectorInfo.selector,
                 document: sourceDoc,
                 lineStart: selectorInfo.ruleStartLine + lineOffset,
                 lineEnd: selectorInfo.declListEndLine + lineOffset
@@ -371,4 +391,5 @@ define(function (require, exports, module) {
     
     exports._findAllMatchingSelectorsInText = _findAllMatchingSelectorsInText; // For testing only
     exports.findMatchingRules = findMatchingRules;
+    exports.extractAllSelectors = extractAllSelectors;
 });

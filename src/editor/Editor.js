@@ -1,9 +1,29 @@
 /*
- * Copyright 2012 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ *  
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ *  
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *  
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * DEALINGS IN THE SOFTWARE.
+ * 
  */
 
-/*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, maxerr: 50 */
-/*global define: false, $: false, CodeMirror: false */
+
+/*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
+/*global define, $, CodeMirror, window */
 
 /**
  * Editor is a 1-to-1 wrapper for a CodeMirror editor instance. It layers on Brackets-specific
@@ -41,10 +61,14 @@
 define(function (require, exports, module) {
     'use strict';
     
-    var EditorManager    = require("editor/EditorManager");
-    var TextRange        = require("document/TextRange").TextRange;
+    var EditorManager   = require("editor/EditorManager"),
+        Commands        = require("command/Commands"),
+        CommandManager  = require("command/CommandManager"),
+        PerfUtils       = require("utils/PerfUtils"),
+        TextRange       = require("document/TextRange").TextRange,
+        ViewUtils       = require("utils/ViewUtils");
     
-    
+
     /**
      * @private
      * Handle Tab key press.
@@ -165,34 +189,82 @@ define(function (require, exports, module) {
         var instance = editor._codeMirror;
         if (event.type === "keypress") {
             var keyStr = String.fromCharCode(event.which || event.keyCode);
-            if (/[\]\}\)]/.test(keyStr)) {
-                // If the whole line is whitespace, auto-indent it
-                var lineNum = instance.getCursor().line;
-                var lineStr = instance.getLine(lineNum);
+            if (/[\]\{\}\)]/.test(keyStr)) {
+                // If all text before the cursor is whitespace, auto-indent it
+                var cursor = instance.getCursor();
+                var lineStr = instance.getLine(cursor.line);
+                var nonWS = lineStr.search(/\S/);
                 
-                if (!/\S/.test(lineStr)) {
+                if (nonWS === -1 || nonWS >= cursor.ch) {
                     // Need to do the auto-indent on a timeout to ensure
                     // the keypress is handled before auto-indenting.
                     // This is the same timeout value used by the
                     // electricChars feature in CodeMirror.
-                    setTimeout(function () {
-                        instance.indentLine(lineNum);
+                    window.setTimeout(function () {
+                        instance.indentLine(cursor.line);
                     }, 75);
                 }
             }
         }
     }
+
+    function _handleSelectAll() {
+        var editor = EditorManager.getFocusedEditor();
+        if (editor) {
+            editor._selectAllVisible();
+        }
+    }
     
     /** Launches CodeMirror's basic Find-within-single-editor feature */
-    function _launchFind(codeMirror) {
-        // Bring up CodeMirror's existing search bar UI
-        codeMirror.execCommand("find");
-        
-        // Prepopulate the search field with the current selection, if any
-        var findBarTextField = $(".CodeMirror-dialog input[type='text']");
-        findBarTextField.attr("value", codeMirror.getSelection());
-        findBarTextField.get(0).select();
+    function _launchFind() {
+        var editor = EditorManager.getFocusedEditor();
+        if (editor) {
+            var codeMirror = editor._codeMirror;
+
+            // Bring up CodeMirror's existing search bar UI
+            codeMirror.execCommand("find");
+
+            // Prepopulate the search field with the current selection, if any
+            $(".CodeMirror-dialog input[type='text']")
+                .attr("value", codeMirror.getSelection())
+                .get(0).select();
+        }
     }
+
+    function _findNext() {
+        var editor = EditorManager.getFocusedEditor();
+        if (editor) {
+            editor._codeMirror.execCommand("findNext");
+        }
+    }
+
+    function _findPrevious() {
+        var editor = EditorManager.getFocusedEditor();
+        if (editor) {
+            editor._codeMirror.execCommand("findPrev");
+        }
+    }
+
+    function _replace() {
+        var editor = EditorManager.getFocusedEditor();
+        if (editor) {
+            editor._codeMirror.execCommand("replace");
+        }
+    }
+    
+    
+    
+    /**
+     * List of all current (non-destroy()ed) Editor instances. Needed when changing global preferences
+     * that affect all editors, e.g. tabbing or color scheme settings.
+     * @type {Array.<Editor>}
+     */
+    var _instances = [];
+    
+    /** @type {boolean}  Global setting: When inserting new text, use tab characters? (instead of spaces) */
+    var _useTabChar = false;
+    
+    
     
     /**
      * @constructor
@@ -219,6 +291,8 @@ define(function (require, exports, module) {
     function Editor(document, makeMasterEditor, mode, container, additionalKeys, range) {
         var self = this;
         
+        _instances.push(this);
+        
         // Attach to document: add ref & handlers
         this.document = document;
         document.addRef();
@@ -239,7 +313,8 @@ define(function (require, exports, module) {
         
         // Editor supplies some standard keyboard behavior extensions of its own
         var codeMirrorKeyMap = {
-            "Tab"  : _handleTabKey,
+            "Tab" : _handleTabKey,
+
             "Left" : function (instance) {
                 if (!_handleSoftTabNavigation(instance, -1, "moveH")) {
                     CodeMirror.commands.goCharLeft(instance);
@@ -260,17 +335,6 @@ define(function (require, exports, module) {
                     CodeMirror.commands.delCharRight(instance);
                 }
             },
-            "Ctrl-A": function () {
-                self._selectAllVisible();
-            },
-            "Cmd-A": function () {
-                self._selectAllVisible();
-            },
-            "Ctrl-F": _launchFind,
-            "Cmd-F": _launchFind,
-            "F3": "findNext",
-            "Shift-F3": "findPrev",
-            "Ctrl-H": "replace",
             "Shift-Delete": "cut",
             "Ctrl-Insert": "copy",
             "Shift-Insert": "paste"
@@ -289,7 +353,8 @@ define(function (require, exports, module) {
         // (note: CodeMirror doesn't actually require using 'new', but jslint complains without it)
         this._codeMirror = new CodeMirror(container, {
             electricChars: false,   // we use our own impl of this to avoid CodeMirror bugs; see _checkElectricChars()
-            indentUnit : 4,
+            indentUnit: 4,
+            indentWithTabs: _useTabChar,
             lineNumbers: true,
             matchBrackets: true,
             extraKeys: codeMirrorKeyMap
@@ -332,6 +397,13 @@ define(function (require, exports, module) {
         if (makeMasterEditor) {
             document._makeEditable(this);
         }
+        
+        // Add scrollTop property to this object for the scroll shadow code to use
+        Object.defineProperty(this, "scrollTop", {
+            get: function () {
+                return this._codeMirror.scrollPos().y;
+            }
+        });
     }
     
     /**
@@ -343,6 +415,8 @@ define(function (require, exports, module) {
         // CodeMirror docs for getWrapperElement() say all you have to do is "Remove this from your
         // tree to delete an editor instance."
         $(this.getRootElement()).remove();
+        
+        _instances.splice(_instances.indexOf(this), 1);
         
         // Disconnect from Document
         this.document.releaseRef();
@@ -573,11 +647,22 @@ define(function (require, exports, module) {
      * @param {!string} text
      */
     Editor.prototype._resetText = function (text) {
+        var perfTimerName = PerfUtils.markStart("Edtitor._resetText()\t" + (!this.document || this.document.file.fullPath));
+
+        var cursorPos = this.getCursorPos(),
+            scrollPos = this.getScrollPos();
+        
         // This *will* fire a change event, but we clear the undo immediately afterward
         this._codeMirror.setValue(text);
         
         // Make sure we can't undo back to the empty state before setValue()
         this._codeMirror.clearHistory();
+        
+        // restore cursor and scroll positions
+        this.setCursorPos(cursorPos);
+        this.setScrollPos(scrollPos.x, scrollPos.y);
+
+        PerfUtils.addMeasurement(perfTimerName);
     };
     
     
@@ -593,7 +678,7 @@ define(function (require, exports, module) {
     /**
      * Sets the cursor position within the editor. Removes any selection.
      * @param {number} line The 0 based line number.
-     * @param {number} ch   The 0 based character position.
+     * @param {number=} ch  The 0 based character position; treated as 0 if unspecified.
      */
     Editor.prototype.setCursorPos = function (line, ch) {
         this._codeMirror.setCursor(line, ch);
@@ -699,8 +784,7 @@ define(function (require, exports, module) {
      * @returns {Object} The editor's lineSpace element.
      */
     Editor.prototype._getLineSpaceElement = function () {
-        var lineSpaceParent = $(".CodeMirror-lines", this.getScrollerElement()).get(0);
-        return $(lineSpaceParent).children().get(0);
+        return $(".CodeMirror-lines", this.getScrollerElement()).children().get(0);
     };
     
     /**
@@ -709,6 +793,15 @@ define(function (require, exports, module) {
      */
     Editor.prototype.getScrollPos = function () {
         return this._codeMirror.scrollPos();
+    };
+    
+    /**
+     * Sets the current scroll position of the editor.
+     * @param {number} x scrollLeft position
+     * @param {number} y scrollTop position
+     */
+    Editor.prototype.setScrollPos = function (x, y) {
+        this._codeMirror.scrollTo(x, y);
     };
 
     /**
@@ -750,7 +843,8 @@ define(function (require, exports, module) {
      */
     Editor.prototype._removeInlineWidgetInternal = function (inlineId) {
         var i;
-        for (i = 0; i < this._inlineWidgets.length; i++) {
+        var l = this._inlineWidgets.length;
+        for (i = 0; i < l; i++) {
             if (this._inlineWidgets[i].id === inlineId) {
                 this._inlineWidgets.splice(i, 1);
                 break;
@@ -899,6 +993,34 @@ define(function (require, exports, module) {
      * @type {?TextRange}
      */
     Editor.prototype._visibleRange = null;
+    
+    
+    // Global settings that affect all Editor instances (both currently open Editors as well as those created
+    // in the future)
+
+    /**
+     * Sets whether to use tab characters (vs. spaces) when inserting new text. Affects all Editors.
+     * @param {boolean} value
+     */
+    Editor.setUseTabChar = function (value) {
+        _useTabChar = value;
+        _instances.forEach(function (editor) {
+            editor._codeMirror.setOption("indentWithTabs", _useTabChar);
+        });
+    };
+    
+    /** @type {boolean}  Gets whether all Editors use tab characters (vs. spaces) when inserting new text */
+    Editor.getUseTabChar = function (value) {
+        return _useTabChar;
+    };
+
+    
+    // Global commands that affect the currently focused Editor instance, wherever it may be
+    CommandManager.register(Commands.EDIT_FIND, _launchFind);
+    CommandManager.register(Commands.EDIT_FIND_NEXT, _findNext);
+    CommandManager.register(Commands.EDIT_REPLACE, _replace);
+    CommandManager.register(Commands.EDIT_FIND_PREVIOUS, _findPrevious);
+    CommandManager.register(Commands.EDIT_SELECT_ALL, _handleSelectAll);
 
     // Define public API
     exports.Editor = Editor;

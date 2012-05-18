@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2012 Adobe Systems Incorporated. All rights reserved.
+ *  
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ *  
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *  
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * DEALINGS IN THE SOFTWARE.
+ * 
+ */
+
+
 /* Styles for jsTree control */
 /* (these are based on jsTree's default theme .css file, so they are not very LESS-like) */
 
@@ -9,14 +33,6 @@
 .jstree-brackets .jstree-closed > ins { background-position:-54px 0; }
 .jstree-brackets .jstree-leaf > ins { background-position:-36px 0; }
 
-.jstree-brackets .jstree-hovered {
-    background: #e7f4f9;
-}
-.jstree-brackets .jstree-clicked {
-    color: #fff;
-    #gradient > .vertical(#5fa3e0, #0065be);
-}
-
 /* Make the links in the JS tree the width of the container
  * by shifting the off the screen by negative margin and moving the
  * content back by pushing the padding. The icons are positioned absolute
@@ -25,13 +41,39 @@
  * so the text ends up back in the same spot visually
  */
 .jstree-brackets li > a {
-    padding-left: @spriteSize18 + 10000;
+    padding-left: @sprite-size-18 + 10000;
     margin-left: -10000px;
     display: block;
 }
 
 .jstree li { 
     position: relative;
+}
+
+.jstree-brackets li {
+    line-height: 10px;
+    vertical-align: baseline;
+    a {
+        color: #BBB;
+        font-size: 13px;
+        cursor: default;
+        
+        &.jstree-clicked {
+            color: #fff;
+        }
+    }
+    .extension a {
+        color: #8e9a9d;
+    }
+    &.jstree-closed, &.jstree-open {
+        margin-left: 10px;
+        > a {
+            color: #fff;
+        }
+    }
+    &.jstree-leaf {
+        margin-left: 10px;
+    }
 }
 
 .jstree ins {
@@ -42,8 +84,8 @@
 .jstree-brackets a.jstree-loading .jstree-icon { background:url("styles/images/throbber.gif") center center no-repeat !important; }
 
 .jstree-brackets li > a {
-    padding-top: 2px;
-    padding-bottom: 2px;
+    padding-top: 3px;
+    padding-bottom: 3px;
 }
 .jstree-brackets li > ins {
     margin-top: 2px;
