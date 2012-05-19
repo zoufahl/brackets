@@ -70,6 +70,7 @@ define(function (require, exports, module) {
         FileUtils               = require("file/FileUtils"),
         Strings                 = require("strings"),
         Dialogs                 = require("widgets/Dialogs"),
+        ServerProxy             = require("utils/ServerProxy"),
         ExtensionLoader         = require("utils/ExtensionLoader"),
         SidebarView             = require("project/SidebarView");
         
@@ -127,6 +128,9 @@ define(function (require, exports, module) {
     // Load native shell when brackets is run in a native shell rather than the browser
     // TODO: (issue #266) load conditionally
     brackets.shellAPI = require("utils/ShellAPI");
+    
+    brackets.fs = ServerProxy.getFileSystem();
+    brackets.app = ServerProxy.getAppProxy();
     
     brackets.inBrowser = !brackets.hasOwnProperty("fs");
     
