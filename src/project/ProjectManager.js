@@ -536,12 +536,16 @@ define(function (require, exports, module) {
      * @return {!string} fullPath reference
      */
     function _getDefaultProjectPath() {
+        return "/Users/glenn/Sites/brackets-app/brackets/src"; // TODO: Change this
+
+        /*
         var loadedPath = window.location.pathname;
         var bracketsSrc = loadedPath.substr(0, loadedPath.lastIndexOf("/"));
         
         bracketsSrc = FileUtils.convertToNativePath(bracketsSrc);
 
         return bracketsSrc;
+        */
     }
     
     /**
@@ -555,7 +559,6 @@ define(function (require, exports, module) {
      *  fails to load.
      */
     function loadProject(rootPath) {
-	rootPath = "c:/Users/Glenn/brackets-app/brackets/src"; // TODO: Change this
         // reset tree node id's
         _projectInitialLoad.id = 0;
 
