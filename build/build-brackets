@@ -1,60 +1,72 @@
 #!/bin/bash
 
-# This script takes the Brackets source from ../src and builds a minified version in the ../dist
+# This script takes the Brackets source from src and builds a minified version in the dist
 # folder. It concatenates and minifies the JS and (most of) the CSS, and copies over various other
 # source files that are actually required at runtime, as well as extensions.
 
-rm -rf ../dist
-mkdir ../dist
+BRACKETS=`dirname $0`/..
+BUILD=$BRACKETS/build
+DIST=$BRACKETS/dist
+SRC=$BRACKETS/src
 
-rm -rf ../dist/tmp
-mkdir ../dist/tmp
+rm -rf $DIST
+mkdir $DIST
+
+rm -rf $DIST/tmp
+mkdir $DIST/tmp
 
 echo "require..."
-./node_modules/requirejs/bin/r.js -o brackets.build.js
+$BUILD/node_modules/requirejs/bin/r.js -o \
+    baseUrl="$SRC" \
+    out="$DIST/tmp/brackets.require.js" \
+    optimize="none" \
+    optimizeCss="none" \
+    useStrict="true" \
+    name="brackets" \
+    include="thirdparty/require"
 
 echo "uglify..."
-cat ../src/thirdparty/jquery-1.7.js \
-    ../src/thirdparty/CodeMirror2/lib/codemirror.js \
-    ../src/thirdparty/CodeMirror2/lib/util/dialog.js \
-    ../src/thirdparty/CodeMirror2/lib/util/searchcursor.js \
-    ../src/thirdparty/CodeMirror2/lib/util/search.js \
-    ../dist/tmp/brackets.concat.js \
-  | ./node_modules/uglify-js/bin/uglifyjs \
-  > ../dist/brackets.min.js
+cat $SRC/thirdparty/jquery-1.7.js \
+    $SRC/thirdparty/CodeMirror2/lib/codemirror.js \
+    $SRC/thirdparty/CodeMirror2/lib/util/dialog.js \
+    $SRC/thirdparty/CodeMirror2/lib/util/searchcursor.js \
+    $SRC/thirdparty/CodeMirror2/lib/util/search.js \
+    $DIST/tmp/brackets.require.js \
+  | $BUILD/node_modules/uglify-js/bin/uglifyjs \
+  > $DIST/brackets.min.js
   
 echo "styles..."
-mkdir ../dist/styles
-./node_modules/less/bin/lessc -x ../src/styles/brackets.less > ../dist/tmp/brackets.less.css
+mkdir $DIST/styles
+$BUILD/node_modules/less/bin/lessc -x $SRC/styles/brackets.less > $DIST/tmp/brackets.less.css
 
 # HACK: need to include codemirror.css here because the @import in the catted file doesn't work
 # since it's not at the beginning of the file.
-cat ../src/thirdparty/CodeMirror2/lib/codemirror.css \
-    ../src/thirdparty/CodeMirror2/lib/util/dialog.css \
-    ../src/styles/quiet-scrollbars.css \
-    ../dist/tmp/brackets.less.css \
-  > ../dist/styles/brackets.min.css
+cat $SRC/thirdparty/CodeMirror2/lib/codemirror.css \
+    $SRC/thirdparty/CodeMirror2/lib/util/dialog.css \
+    $SRC/styles/quiet-scrollbars.css \
+    $DIST/tmp/brackets.less.css \
+  > $DIST/styles/brackets.min.css
   
 # HACK: jsTree currently insists on loading this (empty) CSS file separately at runtime.
-cp ../src/styles/jsTreeTheme.css ../dist/styles
+cp $SRC/styles/jsTreeTheme.css $DIST/styles
 
 echo "assets..."
-cp -R ../src/styles/fonts ../src/styles/images ../dist/styles
+cp -R $SRC/styles/fonts $SRC/styles/images $DIST/styles
 
 echo "index..."
 sed '/!START!/,/!END!/ c\
     <link rel="stylesheet" href="styles/brackets.min.css">\
     <script src="brackets.min.js"></script>\
-' < ../src/index.html \
-  > ../dist/index.html
+' < $SRC/index.html \
+  > $DIST/index.html
   
 echo "extensions..."
-cp -R ../src/extensions ../dist
+cp -R $SRC/extensions $DIST
 
 echo "misc..."
 # TODO: should have a cleaner way to organize files that need to be copied over
-mkdir -p ../dist/LiveDevelopment/Inspector
-cp ../src/LiveDevelopment/Inspector/Inspector.json ../dist/LiveDevelopment/Inspector
+mkdir -p $DIST/LiveDevelopment/Inspector
+cp $SRC/LiveDevelopment/Inspector/Inspector.json $DIST/LiveDevelopment/Inspector
 
-rm -rf ../dist/tmp
+rm -rf $DIST/tmp
 echo "done"
