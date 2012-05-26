@@ -27,6 +27,11 @@
     <meta charset="utf-8">
     <title>Brackets</title>
 
+    <!-- !START! -->
+    <!-- The comment above marks the beginning of the code that will be replaced by
+         links to production/minified scripts and CSS. Note that if you add new CSS 
+         or script files here, you'll need to edit the build scripts. -->
+    
     <!-- CSS/LESS -->
 
     <!-- CSS for CodeMirror search support, currently for debugging only -->
@@ -36,7 +41,6 @@
          nonstandard WebKit-specific syntax. -->
     <link rel="stylesheet" href="styles/quiet-scrollbars.css">
 
-    <!-- TODO (Issue #278): switch between runtime LESS compilation in dev mode and precompiled version -->
     <link rel="stylesheet/less" href="styles/brackets.less">
     <script src="thirdparty/less-1.3.0.min.js"></script>
     <!-- <link rel="stylesheet" href="brackets.min.css"> -->
@@ -54,6 +58,8 @@
     
     <!-- All other scripts are loaded through require. -->
     <script src="thirdparty/require.js" data-main="brackets"></script>
+    
+    <!-- !END! -->
 
 </head>
 <body>

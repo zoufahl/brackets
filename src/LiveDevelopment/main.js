@@ -164,7 +164,9 @@ define(function main(require, exports, module) {
     function init() {
         Inspector.init(config);
         LiveDevelopment.init(config);
-        _loadStyles();
+        // TODO: Commenting these out for now--we don't need them until we implement highlighting,
+        // and they mess up minification.
+        // _loadStyles();
         _setupGoLiveButton();
         /* _setupHighlightButton(); FUTURE - Highlight button */
         if (config.debug) {

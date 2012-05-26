@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# This script takes the Brackets source from ../src and builds a minified version in the ../dist
+# folder. It concatenates and minifies the JS and (most of) the CSS, and copies over various other
+# source files that are actually required at runtime, as well as extensions.
+
+rm -rf ../dist
+mkdir ../dist
+
+rm -rf ../dist/tmp
+mkdir ../dist/tmp
+
+echo "require..."
+./node_modules/requirejs/bin/r.js -o brackets.build.js
+
+echo "uglify..."
+cat ../src/thirdparty/jquery-1.7.js \
+    ../src/thirdparty/CodeMirror2/lib/codemirror.js \
+    ../src/thirdparty/CodeMirror2/lib/util/dialog.js \
+    ../src/thirdparty/CodeMirror2/lib/util/searchcursor.js \
+    ../src/thirdparty/CodeMirror2/lib/util/search.js \
+    ../dist/tmp/brackets.concat.js \
+  | ./node_modules/uglify-js/bin/uglifyjs \
+  > ../dist/brackets.min.js
+  
+echo "styles..."
+mkdir ../dist/styles
+./node_modules/less/bin/lessc -x ../src/styles/brackets.less > ../dist/tmp/brackets.less.css
+
+# HACK: need to include codemirror.css here because the @import in the catted file doesn't work
+# since it's not at the beginning of the file.
+cat ../src/thirdparty/CodeMirror2/lib/codemirror.css \
+    ../src/thirdparty/CodeMirror2/lib/util/dialog.css \
+    ../src/styles/quiet-scrollbars.css \
+    ../dist/tmp/brackets.less.css \
+  > ../dist/styles/brackets.min.css
+  
+# HACK: jsTree currently insists on loading this (empty) CSS file separately at runtime.
+cp ../src/styles/jsTreeTheme.css ../dist/styles
+
+echo "assets..."
+cp -R ../src/styles/fonts ../src/styles/images ../dist/styles
+
+echo "index..."
+sed '/!START!/,/!END!/ c\
+    <link rel="stylesheet" href="styles/brackets.min.css">\
+    <script src="brackets.min.js"></script>\
+' < ../src/index.html \
+  > ../dist/index.html
+  
+echo "extensions..."
+cp -R ../src/extensions ../dist
+
+echo "misc..."
+# TODO: should have a cleaner way to organize files that need to be copied over
+mkdir -p ../dist/LiveDevelopment/Inspector
+cp ../src/LiveDevelopment/Inspector/Inspector.json ../dist/LiveDevelopment/Inspector
+
+rm -rf ../dist/tmp
+echo "done"
