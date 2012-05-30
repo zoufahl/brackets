@@ -26,7 +26,8 @@ $BUILD/node_modules/requirejs/bin/r.js -o \
     include="thirdparty/require"
 
 echo "uglify..."
-cat $SRC/thirdparty/jquery-1.7.js \
+cat $SRC/utils/WebViewShim.js \
+    $SRC/thirdparty/jquery-1.7.js \
     $SRC/thirdparty/CodeMirror2/lib/codemirror.js \
     $SRC/thirdparty/CodeMirror2/lib/util/dialog.js \
     $SRC/thirdparty/CodeMirror2/lib/util/searchcursor.js \
