@@ -37,7 +37,7 @@ define(function (require, exports, module) {
     var pendingCmds;
 
     function sendCommand(cmd) {
-        console.log("sending: " + cmd);
+        //console.log("sending: " + cmd);
         ws.send(cmd);
     }
 
@@ -52,7 +52,7 @@ define(function (require, exports, module) {
 
     ws.onmessage = function (message) {
         var m = JSON.parse(message.data);
-        console.log("received: " + m.id);
+        //console.log("received: " + m.id);
         if (callbacks.hasOwnProperty(m.id)) {
             callbacks[m.id].apply(window, m.result);
             delete callbacks[m.id];
@@ -314,4 +314,5 @@ define(function (require, exports, module) {
 
     exports.getFileSystem = getFileSystem;
     exports.getAppProxy = getAppProxy;
+    exports.callCommand = callCommand;
 });

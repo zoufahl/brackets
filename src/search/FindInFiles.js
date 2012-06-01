@@ -48,7 +48,8 @@ define(function (require, exports, module) {
         Commands            = require("command/Commands"),
         DocumentManager     = require("document/DocumentManager"),
         EditorManager       = require("editor/EditorManager"),
-        FileIndexManager    = require("project/FileIndexManager");
+        FileIndexManager    = require("project/FileIndexManager"),
+        ServerProxy         = require("utils/ServerProxy");
 
     // This dialog class was mostly copied from QuickOpen. We should have a common dialog
     // class that everyone can use.
@@ -284,40 +285,16 @@ define(function (require, exports, module) {
         dialog.showDialog(initialString)
             .done(function (query) {
                 if (query) {
-                    var queryExpr = _getQueryRegExp(query);
-                    FileIndexManager.getFileInfoList("all")
-                        .done(function (fileListResult) {
-                            Async.doInParallel(fileListResult, function (fileInfo) {
-                                var result = new $.Deferred();
-                                
-                                DocumentManager.getDocumentForPath(fileInfo.fullPath)
-                                    .done(function (doc) {
-                                        var matches = _getSearchMatches(doc.getText(), queryExpr);
-                                        
-                                        if (matches && matches.length) {
-                                            searchResults.push({
-                                                fullPath: fileInfo.fullPath,
-                                                matches: matches
-                                            });
-                                        }
-                                        result.resolve();
-                                    })
-                                    .fail(function (error) {
-                                        // Error reading this file. This is most likely because the file isn't a text file.
-                                        // Resolve here so we move on to the next file.
-                                        result.resolve();
-                                    });
-                                
-                                return result.promise();
-                            })
-                                .done(function () {
-                                    console.dir(searchResults);
-                                    _showSearchResults(searchResults);
-                                })
-                                .fail(function () {
-                                    console.log("find in files failed.");
-                                });
-                        });
+                    console.time('findInFiles');
+
+                    ServerProxy.callCommand('grep', 'grepDir', ['/Users/jbrandt/searchtest', 'brackets'], false, 
+                    function (searchResults) {
+                        console.timeEnd('findInFiles');
+                        console.dir(searchResults);
+                        _showSearchResults(searchResults);
+                    });
+
+                    
                 }
             });
     }

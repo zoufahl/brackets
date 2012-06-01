@@ -563,6 +563,7 @@ define(function (require, exports, module) {
      *  fails to load.
      */
     function loadProject(rootPath) {
+	rootPath = "/Users/jbrandt/searchtest"; // TODO: Change this
         // reset tree node id's
         _projectInitialLoad.id = 0;
 
