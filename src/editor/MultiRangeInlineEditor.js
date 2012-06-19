@@ -24,7 +24,7 @@
 // FUTURE: Merge part (or all) of this class with InlineTextEditor
 
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, indent: 4, maxerr: 50 */
-/*global define, $, CodeMirror, window */
+/*global define, $, CodeMirror, window, Handlebars */
 
 /**
  * An inline editor for displaying and editing multiple text ranges. Each range corresponds to a 
@@ -47,6 +47,10 @@ define(function (require, exports, module) {
         Strings             = require("strings"),
         CommandManager      = require("command/CommandManager"),
         PerfUtils           = require("utils/PerfUtils");
+    
+    // Load relatedContainer HTML template
+    var relatedContainerHTML        = require("text!editor/MultiRangeInlineEditor-relatedContainer.html"),
+        relatedContainerTemplate    = Handlebars.compile(relatedContainerHTML);
 
     /**
      * Remove trailing "px" from a style size value.
@@ -57,7 +61,6 @@ define(function (require, exports, module) {
     function _parseStyleSize($target, styleName) {
         return parseInt($target.css(styleName), 10);
     }
-    
     
     /**
      * @constructor
@@ -73,10 +76,15 @@ define(function (require, exports, module) {
     SearchResultItem.prototype.textRange = null;
     SearchResultItem.prototype.$listItem = null;
     
-    function _updateRangeLabel(listItem, range) {
-        var text = range.name + " " + range.textRange.document.file.name + " : " + (range.textRange.startLine + 1);
-        listItem.text(text);
-        listItem.attr("title", text);
+    /**
+     * @private
+     * Generate a label for a SearchItemResult
+     * @param {SearchItemResult}
+     * @returns {string}
+     */
+    function getSearchItemResultLabel(searchItemResult) {
+        var text = searchItemResult.name + " " + searchItemResult.textRange.document.file.name + " : " + (searchItemResult.textRange.startLine + 1);
+        return new Handlebars.SafeString(text);
     }
     
     /**
@@ -128,7 +136,7 @@ define(function (require, exports, module) {
         this.$editorsDiv = $(window.document.createElement('div')).addClass("inlineEditorHolder");
         
         // Outer container for border-left and scrolling
-        this.$relatedContainer = $(window.document.createElement("div")).addClass("related-container");
+        this.$relatedContainer = $(relatedContainerTemplate(this));
         this._relatedContainerInserted = false;
         this._relatedContainerInsertedHandler = this._relatedContainerInsertedHandler.bind(this);
         
@@ -136,29 +144,28 @@ define(function (require, exports, module) {
         this.$relatedContainer.on("DOMNodeInserted", this._relatedContainerInsertedHandler);
         
         // List "selection" highlight
-        this.$selectedMarker = $(window.document.createElement("div")).appendTo(this.$relatedContainer).addClass("selection");
+        this.$selectedMarker = $(this.$relatedContainer.find(".selection"));
         
-        // Inner container
-        var $related = $(window.document.createElement("div")).appendTo(this.$relatedContainer).addClass("related");
+        var rangeItems = this.$relatedContainer.find("li");
         
-        // Range list
-        var $rangeList = $(window.document.createElement("ul")).appendTo($related);
+        // list item event handlers
+        rangeItems.each(function (index, listItem) {
+            $(listItem).mousedown(function () {
+                self.setSelectedIndex(index);
+            });
+        });
         
         // create range list & add listeners for range textrange changes
-        var rangeItemText;
+        var $rangeItem;
         this._ranges.forEach(function (range, i) {
-            // Create list item UI
-            var $rangeItem = $(window.document.createElement("li")).appendTo($rangeList);
-            _updateRangeLabel($rangeItem, range);
-            $rangeItem.mousedown(function () {
-                self.setSelectedIndex(i);
-            });
-
+            $rangeItem = $(rangeItems[i]);
             self._ranges[i].$listItem = $rangeItem;
             
             // Update list item as TextRange changes
             $(self._ranges[i].textRange).on("change", function () {
-                _updateRangeLabel($rangeItem, range);
+                var text = getSearchItemResultLabel(range);
+                $rangeItem.text(text);
+                $rangeItem.attr("title", text);
             });
             
             // If TextRange lost sync, react just as we do for an inline Editor's lostContent event:
@@ -512,6 +519,10 @@ define(function (require, exports, module) {
             focusedMultiRangeInlineEditor._selectNextRange();
         }
     }
+    
+    Handlebars.registerHelper("searchResultItemLabel", function () {
+        return getSearchItemResultLabel(this);
+    });
     
     CommandManager.register(Strings.CMD_QUICK_EDIT_PREV_MATCH,      Commands.QUICK_EDIT_PREV_MATCH, _previousRange);
     CommandManager.register(Strings.CMD_QUICK_EDIT_NEXT_MATCH,      Commands.QUICK_EDIT_NEXT_MATCH, _nextRange);
