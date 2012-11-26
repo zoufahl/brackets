@@ -17,6 +17,7 @@ define(function (require, exports, module) {
     }
     
     CssAttrHints.prototype.getQueryInfo = function (editor, cursor) {
+        console.log("CssHints query");
         var query       = {queryStr: null},
             pos         = $.extend({}, cursor),
             ctx         = TokenUtils.getInitialContext(editor._codeMirror, pos),
@@ -141,6 +142,8 @@ define(function (require, exports, module) {
      */
     CssAttrHints.prototype.shouldShowHintsOnKey = function (key) {
         var alphabet = "abcdefghijklmnopqrstuvwxyz";
+        var d = new Date();
+        console.log("CssHintscall returns [" + (alphabet.indexOf(key) !== -1) + "] " + d.getSeconds() + "." + d.getMilliseconds());
         return (alphabet.indexOf(key) !== -1);
         // return (key === "{" || key === ";"); /* only popup after brackets, else this will always trigger */
         // return (key === " " || key === "{" );
