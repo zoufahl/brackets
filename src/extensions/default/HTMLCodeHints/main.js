@@ -75,7 +75,6 @@ define(function (require, exports, module) {
      *      Return null in queryStr to indicate NO hints can be provided.
      */
     TagHints.prototype.getQueryInfo = function (editor, cursor) {
-        console.log("TagHints query");
         var tagInfo = HTMLUtils.getTagInfo(editor, cursor),
             query = {queryStr: null};
 
@@ -85,6 +84,7 @@ define(function (require, exports, module) {
             }
 
         }
+        console.log("TagHints query" +  query.queryStr);
 
         return query;
     };
@@ -248,7 +248,6 @@ define(function (require, exports, module) {
      *      Return null in queryStr to indicate NO hints can be provided.
      */
     AttrHints.prototype.getQueryInfo = function (editor, cursor) {
-        console.log("AttrHints query");
 
         var tagInfo = HTMLUtils.getTagInfo(editor, cursor),
             query = {queryStr: null},
@@ -274,7 +273,7 @@ define(function (require, exports, module) {
 
             // TODO: get existing attributes for the current tag and add them to query.usedAttr
         }
-
+        console.log("AttrHints query " + query.queryStr);
         return query;
     };
 

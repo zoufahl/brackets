@@ -17,7 +17,6 @@ define(function (require, exports, module) {
     }
     
     CssAttrHints.prototype.getQueryInfo = function (editor, cursor) {
-        console.log("CssHints query");
         var query       = {queryStr: null},
             pos         = $.extend({}, cursor),
             ctx         = TokenUtils.getInitialContext(editor._codeMirror, pos),
@@ -77,6 +76,7 @@ define(function (require, exports, module) {
                 this.cssMode = "value";
             }
         }
+        console.log("CssHints query" + query.queryStr);
         return query;
     };
     
