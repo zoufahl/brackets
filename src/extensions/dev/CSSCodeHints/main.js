@@ -78,6 +78,7 @@ define(function (require, exports, module) {
                 this.cssMode = "value";
             }
         }
+        console.log("CssHints query" + query.queryStr);
         return query;
     };
     
@@ -148,6 +149,8 @@ define(function (require, exports, module) {
      */
     CssAttrHints.prototype.shouldShowHintsOnKey = function (key) {
         var alphabet = "abcdefghijklmnopqrstuvwxyz";
+        var d = new Date();
+        console.log("CssHintscall returns [" + (alphabet.indexOf(key) !== -1) + "] " + d.getSeconds() + "." + d.getMilliseconds());
         return (alphabet.indexOf(key) !== -1);
         // return (key === "{" || key === ";"); /* only popup after brackets, else this will always trigger */
         // return (key === " " || key === "{" );

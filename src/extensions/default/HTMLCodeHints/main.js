@@ -84,6 +84,7 @@ define(function (require, exports, module) {
             }
 
         }
+        console.log("TagHints query" +  query.queryStr);
 
         return query;
     };
@@ -126,6 +127,8 @@ define(function (require, exports, module) {
      * @return {boolean} return true/false to indicate whether hinting should be triggered by this key.
      */
     TagHints.prototype.shouldShowHintsOnKey = function (key) {
+        var d = new Date();
+        console.log("TagHintscall returns [" + (key === "<") + "]  " + d.getSeconds() + "." + d.getMilliseconds());
         return key === "<";
     };
 
@@ -245,6 +248,7 @@ define(function (require, exports, module) {
      *      Return null in queryStr to indicate NO hints can be provided.
      */
     AttrHints.prototype.getQueryInfo = function (editor, cursor) {
+
         var tagInfo = HTMLUtils.getTagInfo(editor, cursor),
             query = {queryStr: null},
             tokenType = tagInfo.position.tokenType;
@@ -269,7 +273,7 @@ define(function (require, exports, module) {
 
             // TODO: get existing attributes for the current tag and add them to query.usedAttr
         }
-
+        console.log("AttrHints query " + query.queryStr);
         return query;
     };
 
@@ -475,6 +479,8 @@ define(function (require, exports, module) {
      * @return {boolean} return true/false to indicate whether hinting should be triggered by this key.
      */
     AttrHints.prototype.shouldShowHintsOnKey = function (key) {
+        var d = new Date();
+        console.log("AttrHintscall returns [" + (key === " " || key === "'" || key === "\"" || key === "=") + "]  "  + d.getSeconds() + "." + d.getMilliseconds());
         return (key === " " || key === "'" || key === "\"" || key === "=");
     };
 
