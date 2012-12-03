@@ -21,10 +21,9 @@ define(function (require, exports, module) {
         var query       = {queryStr: null},
             pos         = $.extend({}, cursor),
             ctx         = TokenUtils.getInitialContext(editor._codeMirror, pos),
-            styleblocks = HTMLUtils.findStyleBlocks(editor),
             selector    = CSSUtils.findSelectorAtDocumentPos(editor, cursor),
-            csscontext  = false;
-          
+            cssContext  = false;
+        
         /* first: check overall context - is this a css-valid context */
         if (editor.getModeForSelection() === "css") {
             // we know we are dealing with a .css file or the cursor is inside a <style/> tag, but we don't know if we are actually
@@ -33,20 +32,28 @@ define(function (require, exports, module) {
             do {
                 if (ctx.token.string === "{") {
                     /* first relevant symbol, everything fine */
-                    csscontext = true;
+                    cssContext = true;
                     ctx = TokenUtils.getInitialContext(editor._codeMirror, cursor);
                     break;
                 } else if (ctx.token.string === "}") {
                     /* cursor is outside of set of rules */
-                    csscontext = false;
+                    cssContext = false;
                     break;
                 }
             } while (TokenUtils.moveSkippingWhitespace(TokenUtils.movePrevToken, ctx));
+        } else if (editor.getModeForSelection() === "html"){
+            var htmlContext = HTMLUtils.getTagInfo(editor, cursor);
+            if (htmlContext.attr.name === "style") {
+                cssContext = true;
+                /* this is mandatory but not sufficient since the selector is still empty */
+                /* we force hinting by setting the selector to the html-tagname since this is one possible way for the selector */
+                selector = htmlContext.tagName;
+            }
         }
         
         
         /* third: determine queryStr based on characters around cursor if actually in csscontext */
-        if (csscontext && selector !== "") {
+        if (cssContext && selector !== "") {
             query.queryStr = ctx.token.string;
             if (query.queryStr !== null) {
                 query.queryStr = query.queryStr.trim();
